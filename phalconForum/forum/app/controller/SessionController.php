@@ -37,6 +37,7 @@ class SessionController extends ControllerBase
      */
     protected function indexRedirect()
     {
+        echo 'ansdiansodi';die;
         return $this->response->redirect('discussions');
     }
 
@@ -62,6 +63,7 @@ class SessionController extends ControllerBase
      */
     public function authorizeAction()
     {
+        echo 'llll';die;
         if (!$this->session->has('identity')) {
             $oauth = new OAuth($this->config->get('github', new Config));
             return $oauth->authorize();
@@ -69,16 +71,6 @@ class SessionController extends ControllerBase
 
         return $this->discussionsRedirect();
     }
-
-    /**
-     *
-     */
-    public function registerAction()
-    {
-
-    }
-
-
 
     /**
      * @return \Phalcon\Http\ResponseInterface

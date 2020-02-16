@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="aa38ca8a-e031-443e-be1a-4adb4ded6882" name="al" url="http://120.77.177.221">
+        <fileTransfer host="120.77.177.221" port="22" rootFolder="/data/wwwroot/www.vcbal.cn/forum" accessType="SFTP">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

@@ -18,6 +18,9 @@
 namespace Phosphorum\Provider\Session;
 
 use Phosphorum\Provider\AbstractServiceProvider;
+//use Phosphorum\Provider\Session\Di;
+//use Phalcon\Di;
+
 
 /**
  * Phosphorum\Provider\Session\ServiceProvider
@@ -43,7 +46,12 @@ class ServiceProvider extends AbstractServiceProvider
             $this->serviceName,
             function () {
                 $config = container('config')->session;
-
+//                echo '<pre>';
+//                print_r($config);die;
+//                $default = Di::getDefault();
+//                $args = 'config';
+//                print_r(call_user_func_array([$default, 'get'], $args)) ;
+//                 die;
                 $driver   = $config->drivers->{$config->default};
                 $adapter  = '\Phalcon\Session\Adapter\\' . $driver->adapter;
                 $defaults = [

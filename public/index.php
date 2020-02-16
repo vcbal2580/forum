@@ -18,6 +18,7 @@
 use Phosphorum\Bootstrap;
 
 // Register the auto loader
+//phpinfo();die();
 require __DIR__.'/../bootstrap/autoloader.php';
 
 $bootstrap = new Bootstrap();

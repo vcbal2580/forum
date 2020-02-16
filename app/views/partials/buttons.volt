@@ -15,7 +15,7 @@
             ) -}}
         {%- else -%}
             {{- link_to(
-            'login/oauth/authorize',
+            '/index/login',
             '<span class="octicon octicon-octoface"></span> Log In',
             'class': 'btn btn-sm btn-default',
             'rel': 'nofollow',

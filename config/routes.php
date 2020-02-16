@@ -204,6 +204,13 @@ $router->add(
        'action'     => 'authorize'
     ]
 );
+$router->add(
+    '/index/login',
+    [
+        'controller' => 'discussions',
+        'action'     => 'login'
+    ]
+);
 
 $router->add(
     '/login/oauth/access_token/',
@@ -293,6 +300,14 @@ $router->add(
     [
         'controller' => 'categories',
         'action'     => 'reloadCategories'
+    ]
+);
+
+$router->add(
+    '/category/create',
+    [
+        'controller' => 'categories',
+        'action'     => 'in'
     ]
 );
 

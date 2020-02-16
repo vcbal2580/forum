@@ -19,10 +19,10 @@ return [
     'site' => [
         'name'        => env('APP_NAME'),
         'url'         => env('APP_URL'),
-        'project'     => env('APP_PROJECT'),
+        'project'     => env('APP_PROJECT','VCBAL'),
         'description' => env('APP_DESCRIPTION'),
         'keywords'    => env('APP_KEYWORDS'),
-        'software'    => 'Phosphorum',
+        'software'    => 'Vcbal',
         'repo'        => env('APP_REPO'),
         'docs'        => env('APP_DOCS'),
         'support'     => env('APP_SUPPORT_EMAIL'),
@@ -44,6 +44,7 @@ return [
         'rating'        => 'pg',
         'use_https'     => true,
     ],
+    'salt' =>'6',
 
     'application' => [
         'controllersDir' => app_path('controller') . DIRECTORY_SEPARATOR,
@@ -52,7 +53,7 @@ return [
         'libraryDir'     => app_path('library') . DIRECTORY_SEPARATOR,
         'staticBaseUri'  => env('APP_STATIC_URL'),
         'baseUri'        => env('APP_BASE_URI'),
-        'debug'          => env('APP_DEBUG', false),
+        'debug'          => env('APP_DEBUG', true),
     ],
 
     'mandrillapp' => [
@@ -66,9 +67,9 @@ return [
     ],
 
     'dropbox' => [
-        'accessToken' => env('DROPBOX_TOKEN'),
-        'appSecret'   => env('DROPBOX_SECRET'),
-        'prefix'      => env('DROPBOX_PREFIX'),
+        'accessToken' => env('DROPBOX_TOKEN','AllSomeAwesome'),
+        'appSecret'   => env('DROPBOX_SECRET','app123456'),
+        'prefix'      => env('DROPBOX_PREFIX','94996vcbal'),
     ],
 
     'elasticsearch' => [

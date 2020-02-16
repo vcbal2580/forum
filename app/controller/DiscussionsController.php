@@ -20,6 +20,7 @@ namespace Phosphorum\Controller;
 use Phalcon\Mvc\View;
 use Phalcon\Http\Response;
 use Phosphorum\Model\Karma;
+use Phosphorum\Model\NotificationsBounces;
 use Phosphorum\Model\Posts;
 use Phosphorum\Model\Users;
 use Phalcon\Paginator\Pager;
@@ -33,6 +34,7 @@ use Phalcon\Http\ResponseInterface;
 use Phosphorum\Model\PostsBounties;
 use Phosphorum\Model\TopicTracking;
 use Phosphorum\Model\PostsPollVotes;
+use Phosphorum\Model\Users as ForumUsers;
 use Phosphorum\Mvc\Traits\TokenTrait;
 use Phosphorum\Model\PostsPollOptions;
 use Phosphorum\Model\PostsSubscribers;
@@ -40,6 +42,11 @@ use Phalcon\Paginator\Pager\Range\Sliding;
 use Phosphorum\Model\ActivityNotifications;
 use Phalcon\Paginator\Pager\Layout\Bootstrap;
 use Phalcon\Paginator\Adapter\QueryBuilder as Paginator;
+use Phalcon\Mvc\Model;
+use Phalcon\logger;
+use Phalcon\Logger\AdapterInterface;
+
+
 
 /**
  * Class DiscussionsController
@@ -58,6 +65,7 @@ class DiscussionsController extends ControllerBase
      */
     public function indexAction($order = null, $offset = 0)
     {
+
         /**
          * @var \Phalcon\Mvc\Model\Query\BuilderInterface $itemBuilder
          * @var \Phalcon\Mvc\Model\Query\BuilderInterface $totalBuilder
@@ -76,7 +84,6 @@ class DiscussionsController extends ControllerBase
                 $readposts = explode(",", $ur->topic_id);
             }
         }
-
         $params = null;
         switch ($order) {
             case 'hot':
@@ -777,7 +784,8 @@ class DiscussionsController extends ControllerBase
     public function voteUpAction($id = 0)
     {
         $response = new Response();
-
+        $res =$this->checkTokenGetJson();
+        $this->logger->warning(json_encode($res));
         if (!$this->checkTokenGetJson('post-' . $id)) {
             $csrfTokenError = [
                 'status'  => 'error',
@@ -1028,5 +1036,170 @@ class DiscussionsController extends ControllerBase
         ]);
 
         $this->tag->setTitle('Notifications');
+    }
+    private function generateHash($passwordText, $salt = null){
+        if ($salt === null){
+            $salt = substr(md5(uniqid(rand(), true)), 0, $this->config->get('salt'));
+        } else {
+            $salt = substr($salt, 0, $this->config->get('salt'));
+        }
+        return $salt . sha1($salt . $passwordText);
+    }
+
+    public function loginAction()
+    {
+        $this->tag->setTitle('Welcome to AllSome');
+        $this->view->setVars([
+            'timezones'     => $this->di->getShared('timezones'),
+        ]);
+        $res =  $this->request->getPost();
+        if($res)
+        {
+            /**
+             * Edit/Create the user
+             */
+            $user = ForumUsers::findFirst(
+                [
+                    'conditions' => 'login = :login:',
+                    'bind'       => [
+                        'login' => $res['username'],
+
+                    ],
+                ]
+            );
+
+            if ($user == false) {
+                $user               = new ForumUsers();
+            }else{
+                    if($this->generateHash($res['pwd'], $user->password) != $user->password){
+                        // invalid password
+                        $this->flashSession->error('You password is not right.');
+                        return $this->response->redirect('discussions');
+                    }
+            }
+
+            if ($user->banned == 'Y') {
+                $this->flashSession->error('You have been banned from the forum.');
+                return $this->response->redirect('discussions');
+            }
+
+            // Update session id
+            $this->session->regenerateId(true);
+
+            /**
+             * Update the user information
+             */
+            $user->name  = $res['username'];
+            $user->login = $res['username'];
+            $email       = $res['email'];
+            $user->password = $this->generateHash($res['pwd']);
+            $user->timezone = $res['timezone'];
+
+
+            if (is_string($email)) {
+                $user->email = $email;
+            } elseif (is_array($email) && isset($email['email'])) {
+                $user->email = $email['email'];
+            }
+
+            // In any case user has Gravatar ID even if he has no email
+            $user->gravatar_id = $this->gravatar->getEmailHash($user->email);
+
+            $user->increaseKarma(Karma::LOGIN);
+
+            if (!$user->save()) {
+                foreach ($user->getMessages() as $message) {
+                    $this->flashSession->error((string)$message);
+                    return $this->response->redirect('discussions');
+                }
+            }
+
+            /**
+             * Store the user data in session
+             */
+            $this->session->set('identity', $user->id);
+            $this->session->set('identity-name', $user->name);
+            $this->session->set('identity-email', $user->email);
+            $this->session->set('identity-gravatar', $user->gravatar_id);
+            $this->session->set('identity-timezone', $user->timezone);
+            $this->session->set('identity-theme', $user->theme);
+            $this->session->set('identity-moderator', $user->moderator);
+            $this->session->set('identity-admin', $user->isAdmin??'N');
+            $this->session->set('identity-karma', $user->karma);
+
+            if ($user->getOperationMade() == Model::OP_CREATE) {
+                $this->flashSession->success('Welcome ' . $user->name);
+            } else {
+                $this->flashSession->success('Welcome back ' . $user->name);
+            }
+
+            if ($user->email) {
+                if (false !== strpos($user->email, '@users.noreply.github.com')) {
+                    $messageNotAllow = sprintf(
+                        'Your current e-mail %s does not allow us to send you e-mail notifications',
+                        $this->escaper->escapeHtml($user->email)
+                    );
+                    $this->flashSession->notice($messageNotAllow);
+                }
+            } else {
+                $messageCantSend = "We weren't able to obtain your e-mail address"
+                    . " from Github, we can't send you e-mail notifications";
+                $this->flashSession->notice($messageCantSend);
+            }
+
+            if ($user->getOperationMade() != Model::OP_CREATE) {
+                /**
+                 * Show a notification to users that have e-mail bounces
+                 */
+                $parametersBounces = [
+                    'email = ?0 AND reported = "N"',
+                    'bind' => [$user->email]
+                ];
+                $bounces = NotificationsBounces::find($parametersBounces);
+                if (count($bounces)) {
+                    foreach ($bounces as $bounce) {
+                        $bounce->reported = 'Y';
+                        $bounce->save();
+                    }
+
+                    $messageFailed
+                        = 'We have failed to deliver you some email notifications,'
+                        . ' this might be caused by an invalid email associated to your Github account or '
+                        . 'its mail server is rejecting our emails. Your current e-mail is: '
+                        . $this->escaper->escapeHtml($user->email);
+
+                    $this->flashSession->notice($messageFailed);
+
+                    $parametersBouncesMax = [
+                        'email = ?0 AND created_at >= ?1',
+                        'bind' => [$user->email, time() - 86400 * 7]
+                    ];
+
+                    $bounces = NotificationsBounces::find($parametersBouncesMax);
+
+                    if (count($bounces) >= NotificationsBounces::MAX_BOUNCES) {
+                        $messageRepeat
+                            = 'Due to a repeated number of email bounces we have disabled email '
+                            . 'notifications for your email. You can re-enable them in your settings';
+                        $this->flashSession->notice($messageRepeat);
+                        $user->notifications = 'N';
+                        $user->save();
+                    }
+                }
+
+                /**
+                 * Show a notification to users that haven't spend their votes
+                 */
+                if ($user->votes >= 10 && mt_rand(1, 5) == 3) {
+                    $this->flashSession->notice(
+                        "You have {$user->votes} votes remaining to spend. " .
+                        'If you find something useful in this forum do not hesitate to give others some votes.'
+                    );
+                }
+            }
+
+            return $this->response->redirect('discussions/index');
+        }
+
     }
 }

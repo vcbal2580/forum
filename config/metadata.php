@@ -30,6 +30,7 @@ return [
             'host'    => env('REDIS_HOST', '127.0.0.1'),
             'port'    => env('REDIS_PORT', 6379),
             'index'   => env('REDIS_INDEX', 0),
+            'pwd'   => env('REDIS_PWD', 0),
         ],
 
         'memory' => [

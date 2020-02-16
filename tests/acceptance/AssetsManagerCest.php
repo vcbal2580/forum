@@ -44,4 +44,5 @@ class AssetsManagerCest
         $I->seeFileFound('global.js','public/assets');
         $I->seeFileFound('global-default.css','public/assets');
     }
+
 }

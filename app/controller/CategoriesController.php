@@ -123,6 +123,7 @@ class CategoriesController extends ControllerBase
         ]);
     }
 
+
     /**
      * Add new category
      */

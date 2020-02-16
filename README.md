@@ -10,12 +10,6 @@ You can adapt it to your own needs or improve it if you want.
 
 Please write us if you have any feedback.
 
-## Composer installation
-
-```
-composer create-project phalcon/forum
-```
-
 ## NOTE
 
 The master branch will always contain the latest stable version. If you wish
@@ -25,22 +19,6 @@ switch to the relevant [branch][:branch:]/[tag][:tags:].
 ## Documentation
 
 The current version can be seen at [Phosphorum Wiki][:wiki:].
-
-## Sponsors
-
-Become a sponsor and get your logo on our README on Github with a link to your site. [[Become a sponsor](https://opencollective.com/phalcon#sponsor)]
-
-<a href="https://opencollective.com/phalcon/#contributors">
-<img src="https://opencollective.com/phalcon/tiers/sponsors.svg?avatarHeight=48&width=800">
-</a>
-
-## Backers
-
-Support us with a monthly donation and help us continue our activities. [[Become a backer](https://opencollective.com/phalcon#backer)]
-
-<a href="https://opencollective.com/phalcon/#contributors">
-<img src="https://opencollective.com/phalcon/tiers/backers.svg?avatarHeight=48&width=800&height=200">
-</a>
 
 ## License
 

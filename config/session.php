@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'default' => env('SESSION_DRIVER'),
+    'default' => env('SESSION_DRIVER','redis'),
 
     'drivers' => [
 
@@ -25,6 +25,7 @@ return [
             'host'       => env('REDIS_HOST', '127.0.0.1'),
             'port'       => env('REDIS_PORT', 6379),
             'index'      => env('REDIS_INDEX', 0),
+            'auth'   => env('REDIS_PWD',123456),
             'persistent' => true,
         ],
 
